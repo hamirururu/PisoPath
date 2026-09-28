@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --color-beige: #dbcea5;
+  --color-cream: #ece7d1;
+  --color-sage: #8e977d;
+  --color-earth: #8a7650;
+
+  /* Supporting neutrals derived from the palette, for readable text */
+  --color-ink: #3b3223;
+  --color-earth-dark: #6b5a3b;
+  --color-paper: #f7f4e8;
+  --color-danger: #9b4a34;
+  --color-danger-soft: #f1dfd6;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-cream font-sans text-ink antialiased;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-earth;
+  }
+}
