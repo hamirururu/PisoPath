@@ -1,81 +1,81 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Database, LogOut, Plus } from "lucide-react";
-import Card from "../components/ui/Card";
+import {
+  Bus, CalendarDays, LoaderCircle, Plus, RefreshCw, ShoppingBag, Tag,
+  UtensilsCrossed, Wallet,
+} from "lucide-react";
 import Button from "../components/ui/Button";
 import Alert from "../components/ui/Alert";
+import SummaryCard from "../components/dashboard/SummaryCard";
+import CategoryBreakdown from "../components/dashboard/CategoryBreakdown";
+import DailySpendingChart from "../components/dashboard/DailySpendingChart";
+import RecentTransactions from "../components/dashboard/RecentTransactions";
 import { useAuth } from "../hooks/useAuth";
-import { supabase } from "../lib/supabase";
-import { formatLongDate } from "../utils/format";
-
-function DbCheck() {
-  const [status, setStatus] = useState({ state: "loading" });
-
-  useEffect(() => {
-    let cancelled = false;
-    supabase
-      .from("expenses")
-      .select("id", { count: "exact", head: true })
-      .then(({ count, error }) => {
-        if (cancelled) return;
-        setStatus(
-          error
-            ? { state: "error", message: error.message }
-            : { state: "ok", count }
-        );
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return (
-    <Card className="flex items-center gap-4">
-      <span className="grid size-12 place-items-center rounded-2xl bg-sage/30 text-earth-dark">
-        <Database size={22} />
-      </span>
-      <div className="text-sm">
-        <p className="font-semibold">Database check</p>
-        {status.state === "loading" && <p className="text-earth-dark">Connecting…</p>}
-        {status.state === "ok" && (
-          <p className="text-earth-dark">
-            Connected. You have <strong>{status.count}</strong> expenses.
-          </p>
-        )}
-        {status.state === "error" && (
-          <Alert variant="error">{status.message}</Alert>
-        )}
-      </div>
-    </Card>
-  );
-}
+import { useDashboardData } from "../hooks/useDashboardData";
+import { formatLongDate, formatPeso } from "../utils/format";
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
+  const { loading, error, summary, categoryBreakdown, dailySpending, recent, reload } =
+    useDashboardData();
   const firstName = user?.user_metadata?.full_name?.split(" ")[0];
 
   return (
     <section className="space-y-6">
-      <header>
-        <p className="text-sm text-earth-dark">{formatLongDate()}</p>
-        <h1 className="text-2xl font-semibold">
-          Welcome{firstName ? `, ${firstName}` : ""} 👋
-        </h1>
-        <p className="text-sm text-earth-dark">{user?.email}</p>
-      </header>
-
-      <DbCheck />
-
-      <div className="flex flex-wrap gap-3">
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <button
+            onClick={reload}
+            className="flex items-center gap-1.5 text-sm text-earth-dark"
+          >
+            <CalendarDays size={14} /> {formatLongDate()}
+            <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+          </button>
+          <h1 className="text-2xl font-semibold">
+            Welcome{firstName ? `, ${firstName}` : ""} 👋
+          </h1>
+        </div>
         <Link to="/add">
           <Button>
             <Plus size={18} /> Quick Add Expense
           </Button>
         </Link>
-        <Button variant="soft" onClick={() => signOut()}>
-          <LogOut size={18} /> Sign out
-        </Button>
-      </div>
+      </header>
+
+      {error && <Alert variant="error">{error}</Alert>}
+
+      {loading ? (
+        <div className="flex items-center justify-center py-16 text-earth-dark">
+          <LoaderCircle className="animate-spin" size={28} />
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <SummaryCard label="Today" amount={formatPeso(summary.today)} icon={CalendarDays} emphasis />
+            <SummaryCard label="This week" amount={formatPeso(summary.week)} icon={CalendarDays} />
+            <SummaryCard label="This month" amount={formatPeso(summary.month)} icon={CalendarDays} />
+            <SummaryCard label="Overall" amount={formatPeso(summary.overall)} icon={Wallet} />
+          </div>
+
+          <div>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <SummaryCard label="Transportation" amount={formatPeso(summary.transportation)} icon={Bus} />
+              <SummaryCard label="Food" amount={formatPeso(summary.food)} icon={UtensilsCrossed} />
+              <SummaryCard label="Shopping" amount={formatPeso(summary.shopping)} icon={ShoppingBag} />
+              <SummaryCard label="Other" amount={formatPeso(summary.other)} icon={Tag} />
+            </div>
+            <p className="mt-2 text-xs text-earth-dark">
+              Category totals reflect this month's spending.
+            </p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <DailySpendingChart data={dailySpending} />
+            <CategoryBreakdown data={categoryBreakdown} />
+          </div>
+
+          <RecentTransactions items={recent} />
+        </>
+      )}
     </section>
   );
 }
