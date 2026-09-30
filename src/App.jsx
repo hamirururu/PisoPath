@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./layouts/AppLayout";
 import ProtectedRoute from "./components/routing/ProtectedRoute";
 import PublicRoute from "./components/routing/PublicRoute";
+import Alert from "./components/ui/Alert";
+import { configError } from "./lib/supabase";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -16,6 +18,16 @@ import Budgets from "./pages/Budgets";
 import Settings from "./pages/Settings";
 
 export default function App() {
+  // A misconfigured build used to throw inside supabase.js before React mounted,
+  // leaving a blank white page. Say what is wrong instead.
+  if (configError) {
+    return (
+      <div className="mx-auto max-w-2xl p-6">
+        <Alert variant="error">{configError}</Alert>
+      </div>
+    );
+  }
+
   return (
     <Routes>
       <Route element={<PublicRoute />}>
