@@ -6,6 +6,7 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
+import AuthCallback from "./pages/auth/AuthCallback";
 import Dashboard from "./pages/Dashboard";
 import AddExpense from "./pages/AddExpense";
 import History from "./pages/History";
@@ -17,17 +18,16 @@ import Settings from "./pages/Settings";
 export default function App() {
   return (
     <Routes>
-      {/* Only for signed-out users */}
       <Route element={<PublicRoute />}>
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route path="forgot-password" element={<ForgotPassword />} />
       </Route>
 
-      {/* The email link opens this page with a temporary session */}
+      {/* Standalone: reached via email links, not gated by session state */}
       <Route path="reset-password" element={<ResetPassword />} />
+      <Route path="auth/callback" element={<AuthCallback />} />
 
-      {/* Only for signed-in users */}
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<Dashboard />} />

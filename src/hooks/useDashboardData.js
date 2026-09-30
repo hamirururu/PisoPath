@@ -4,7 +4,7 @@ import {
   fetchExpensesBetween,
   fetchRecentExpenses,
 } from "../services/expenseService";
-import { daysAgoISO, startOfMonthISO, startOfWeekISO, todayISO } from "../utils/dates";
+import { startOfMonthISO, startOfWeekISO, toLocalISO, todayISO } from "../utils/dates";
 
 const BUCKET_KEYS = ["Transportation", "Food", "Shopping"];
 
@@ -29,13 +29,18 @@ export function useDashboardData() {
     setState((s) => ({ ...s, loading: true, error: "" }));
     try {
       const today = todayISO();
-      const weekStart = startOfWeekISO();
+      const weekStart = startOfWeekISO(); // Monday of this week
       const monthStart = startOfMonthISO();
-      const chartStart = daysAgoISO(6); // last 7 days, inclusive of today
+
+      // Monday-of-this-week through Sunday-of-this-week
+      const weekStartDate = new Date(`${weekStart}T00:00:00`);
+      const weekEndDate = new Date(weekStartDate);
+      weekEndDate.setDate(weekStartDate.getDate() + 6);
+      const weekEnd = toLocalISO(weekEndDate);
 
       const [allAmounts, chartRows, recent] = await Promise.all([
         fetchAllAmounts(),
-        fetchExpensesBetween(chartStart, today),
+        fetchExpensesBetween(weekStart, weekEnd),
         fetchRecentExpenses(6),
       ]);
 
@@ -45,7 +50,7 @@ export function useDashboardData() {
       const monthRows = allAmounts.filter((r) => r.expense_date >= monthStart);
       summary.month = monthRows.reduce((s, r) => s + Number(r.amount), 0);
       summary.week = allAmounts
-        .filter((r) => r.expense_date >= weekStart)
+        .filter((r) => r.expense_date >= weekStart && r.expense_date <= weekEnd)
         .reduce((s, r) => s + Number(r.amount), 0);
       summary.today = allAmounts
         .filter((r) => r.expense_date === today)
@@ -66,15 +71,16 @@ export function useDashboardData() {
         .map(([category, total]) => ({ category, total }))
         .sort((a, b) => b.total - a.total);
 
+      // Build Mon..Sun in fixed order, regardless of what today is
       const dayMap = {};
       for (const row of chartRows) {
         dayMap[row.expense_date] = (dayMap[row.expense_date] || 0) + Number(row.amount);
       }
       const dailySpending = [];
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const iso = d.toISOString().slice(0, 10);
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStartDate);
+        d.setDate(weekStartDate.getDate() + i);
+        const iso = toLocalISO(d);
         dailySpending.push({
           date: iso,
           label: d.toLocaleDateString("en-PH", { weekday: "short" }),

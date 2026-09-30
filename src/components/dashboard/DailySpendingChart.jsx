@@ -1,5 +1,6 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import Card from "../ui/Card";
+import YTick from "../ui/YTick";
 import { formatPeso } from "../../utils/format";
 
 function ChartTooltip({ active, payload, label }) {
@@ -18,7 +19,7 @@ export default function DailySpendingChart({ data }) {
       <h2 className="mb-4 font-semibold">Last 7 days</h2>
       <div className="h-56">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ left: -20, right: 8, top: 8, bottom: 0 }}>
+          <BarChart data={data} margin={{ left: 8, right: 8, top: 8, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#DBCEA5" vertical={false} />
             <XAxis
               dataKey="label"
@@ -27,11 +28,10 @@ export default function DailySpendingChart({ data }) {
               tickLine={false}
             />
             <YAxis
-              tick={{ fontSize: 12, fill: "#6B5A3B" }}
+              tick={<YTick />}
               axisLine={false}
               tickLine={false}
-              width={48}
-              tickFormatter={(v) => `₱${v}`}
+              width={44}
             />
             <Tooltip content={<ChartTooltip />} cursor={{ fill: "#DBCEA5", opacity: 0.3 }} />
             <Bar dataKey="total" fill="#8A7650" radius={[8, 8, 0, 0]} maxBarSize={36} />

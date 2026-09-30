@@ -6,6 +6,7 @@ import Alert from "../../components/ui/Alert";
 import Button from "../../components/ui/Button";
 import TextField from "../../components/ui/TextField";
 import PasswordField from "../../components/ui/PasswordField";
+import ResendConfirmation from "../../components/auth/ResendConfirmation";
 import { useAuth } from "../../hooks/useAuth";
 
 export default function Login() {
@@ -13,18 +14,25 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [unconfirmed, setUnconfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (submitting) return;
     setError("");
+    setUnconfirmed(false);
     setSubmitting(true);
     try {
       await signIn(email.trim(), password);
-      // PublicRoute redirects automatically once the session exists
     } catch (err) {
-      setError(err.message || "Could not sign in. Please try again.");
+      const message = err.message || "Could not sign in. Please try again.";
+      if (message.toLowerCase().includes("confirm")) {
+        setUnconfirmed(true);
+        setError("Please confirm your email before signing in.");
+      } else {
+        setError(message);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -43,8 +51,17 @@ export default function Login() {
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate={false}>
-        {error && <Alert variant="error">{error}</Alert>}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <Alert variant="error">
+            <p>{error}</p>
+            {unconfirmed && (
+              <div className="mt-2">
+                <ResendConfirmation email={email.trim()} />
+              </div>
+            )}
+          </Alert>
+        )}
         <TextField
           label="Email"
           type="email"

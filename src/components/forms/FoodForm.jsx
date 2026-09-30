@@ -8,19 +8,21 @@ import Select from "../ui/Select";
 import TextField from "../ui/TextField";
 import TextArea from "../ui/TextArea";
 import { FOOD_CATEGORIES } from "../../lib/categories";
-import { createFoodExpense } from "../../services/expenseService";
+import { createFoodExpense, updateFoodExpense } from "../../services/expenseService";
 import { nowDateAndTime } from "../../utils/nowParts";
 
-export default function FoodForm({ onBack }) {
+export default function FoodForm({ onBack, expense, onSaved }) {
   const navigate = useNavigate();
-  const [store, setStore] = useState("");
-  const [item, setItem] = useState("");
-  const [category, setCategory] = useState(FOOD_CATEGORIES[0]);
-  const [amount, setAmount] = useState("");
-  const [notes, setNotes] = useState("");
-  const { date, time } = nowDateAndTime();
-  const [expenseDate, setExpenseDate] = useState(date);
-  const [expenseTime, setExpenseTime] = useState(time);
+  const isEdit = Boolean(expense);
+
+  const [store, setStore] = useState(expense?.store_name || "");
+  const [item, setItem] = useState(expense?.expense_name || "");
+  const [category, setCategory] = useState(expense?.subcategory || FOOD_CATEGORIES[0]);
+  const [amount, setAmount] = useState(isEdit ? String(expense.amount) : "");
+  const [notes, setNotes] = useState(expense?.notes || "");
+  const defaults = nowDateAndTime();
+  const [expenseDate, setExpenseDate] = useState(expense?.expense_date || defaults.date);
+  const [expenseTime, setExpenseTime] = useState(expense?.expense_time?.slice(0, 5) || defaults.time);
   const [amountError, setAmountError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -41,18 +43,32 @@ export default function FoodForm({ onBack }) {
 
     setSubmitting(true);
     try {
-      await createFoodExpense({
-        storeName: store.trim(),
-        itemName: item.trim(),
-        category,
-        amount: numericAmount,
-        date: expenseDate,
-        time: expenseTime,
-        notes,
-        clientId: crypto.randomUUID(),
-      });
-      toast.success("Food expense saved!");
-      navigate("/", { replace: true });
+      if (isEdit) {
+        await updateFoodExpense(expense.id, {
+          storeName: store.trim(),
+          itemName: item.trim(),
+          category,
+          amount: numericAmount,
+          date: expenseDate,
+          time: expenseTime,
+          notes,
+        });
+        toast.success("Food expense updated!");
+        onSaved?.();
+      } else {
+        await createFoodExpense({
+          storeName: store.trim(),
+          itemName: item.trim(),
+          category,
+          amount: numericAmount,
+          date: expenseDate,
+          time: expenseTime,
+          notes,
+          clientId: crypto.randomUUID(),
+        });
+        toast.success("Food expense saved!");
+        navigate("/", { replace: true });
+      }
     } catch (err) {
       toast.error(err.message || "Could not save this expense.");
     } finally {
@@ -61,7 +77,7 @@ export default function FoodForm({ onBack }) {
   }
 
   return (
-    <FormShell title="Food" onBack={onBack} onSubmit={handleSubmit} submitting={submitting}>
+    <FormShell title={isEdit ? "Edit Food Expense" : "Food"} onBack={onBack} onSubmit={handleSubmit} submitting={submitting}>
       <TextField label="Store or restaurant" value={store} onChange={(e) => setStore(e.target.value)} placeholder="Jollibee" />
       <TextField label="Food or item purchased" required value={item} onChange={(e) => setItem(e.target.value)} placeholder="Chickenjoy with Rice" />
       <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value)}>

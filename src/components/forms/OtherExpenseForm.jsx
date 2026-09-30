@@ -8,19 +8,21 @@ import Select from "../ui/Select";
 import TextField from "../ui/TextField";
 import TextArea from "../ui/TextArea";
 import { useCategories } from "../../hooks/useCategories";
-import { createOtherExpense } from "../../services/expenseService";
+import { createOtherExpense, updateOtherExpense } from "../../services/expenseService";
 import { nowDateAndTime } from "../../utils/nowParts";
 
-export default function OtherExpenseForm({ onBack }) {
+export default function OtherExpenseForm({ onBack, expense, onSaved }) {
   const navigate = useNavigate();
+  const isEdit = Boolean(expense);
   const { allCategories, loading: loadingCategories } = useCategories();
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
-  const [amount, setAmount] = useState("");
-  const [notes, setNotes] = useState("");
-  const { date, time } = nowDateAndTime();
-  const [expenseDate, setExpenseDate] = useState(date);
-  const [expenseTime, setExpenseTime] = useState(time);
+
+  const [name, setName] = useState(expense?.expense_name || "");
+  const [category, setCategory] = useState(expense?.category || "");
+  const [amount, setAmount] = useState(isEdit ? String(expense.amount) : "");
+  const [notes, setNotes] = useState(expense?.notes || "");
+  const defaults = nowDateAndTime();
+  const [expenseDate, setExpenseDate] = useState(expense?.expense_date || defaults.date);
+  const [expenseTime, setExpenseTime] = useState(expense?.expense_time?.slice(0, 5) || defaults.time);
   const [amountError, setAmountError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -43,17 +45,30 @@ export default function OtherExpenseForm({ onBack }) {
 
     setSubmitting(true);
     try {
-      await createOtherExpense({
-        expenseName: name.trim(),
-        category: effectiveCategory,
-        amount: numericAmount,
-        date: expenseDate,
-        time: expenseTime,
-        notes,
-        clientId: crypto.randomUUID(),
-      });
-      toast.success("Expense saved!");
-      navigate("/", { replace: true });
+      if (isEdit) {
+        await updateOtherExpense(expense.id, {
+          expenseName: name.trim(),
+          category: effectiveCategory,
+          amount: numericAmount,
+          date: expenseDate,
+          time: expenseTime,
+          notes,
+        });
+        toast.success("Expense updated!");
+        onSaved?.();
+      } else {
+        await createOtherExpense({
+          expenseName: name.trim(),
+          category: effectiveCategory,
+          amount: numericAmount,
+          date: expenseDate,
+          time: expenseTime,
+          notes,
+          clientId: crypto.randomUUID(),
+        });
+        toast.success("Expense saved!");
+        navigate("/", { replace: true });
+      }
     } catch (err) {
       toast.error(err.message || "Could not save this expense.");
     } finally {
@@ -62,14 +77,9 @@ export default function OtherExpenseForm({ onBack }) {
   }
 
   return (
-    <FormShell title="Other Expense" onBack={onBack} onSubmit={handleSubmit} submitting={submitting}>
+    <FormShell title={isEdit ? "Edit Expense" : "Other Expense"} onBack={onBack} onSubmit={handleSubmit} submitting={submitting}>
       <TextField label="Expense name" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Personal care items" />
-      <Select
-        label="Category"
-        value={effectiveCategory}
-        onChange={(e) => setCategory(e.target.value)}
-        disabled={loadingCategories}
-      >
+      <Select label="Category" value={effectiveCategory} onChange={(e) => setCategory(e.target.value)} disabled={loadingCategories}>
         {allCategories.map((c) => (
           <option key={c} value={c}>{c}</option>
         ))}

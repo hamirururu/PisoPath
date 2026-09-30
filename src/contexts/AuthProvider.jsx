@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { AuthContext } from "./auth-context";
 
-// Supabase returns { data, error }. We throw errors so pages can use try/catch.
 const unwrap = ({ data, error }) => {
   if (error) throw error;
   return data;
@@ -13,13 +12,11 @@ export default function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Restore a saved session (sessions persist in the browser automatically)
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setLoading(false);
     });
 
-    // Stay in sync with sign in, sign out, token refresh, password recovery
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
@@ -42,7 +39,7 @@ export default function AuthProvider({ children }) {
             password,
             options: {
               data: { full_name: fullName },
-              emailRedirectTo: window.location.origin,
+              emailRedirectTo: `${window.location.origin}/auth/callback`,
             },
           })
         ),
@@ -60,6 +57,14 @@ export default function AuthProvider({ children }) {
         ),
       updatePassword: async (password) =>
         unwrap(await supabase.auth.updateUser({ password })),
+      resendConfirmation: async (email) =>
+        unwrap(
+          await supabase.auth.resend({
+            type: "signup",
+            email,
+            options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+          })
+        ),
     }),
     [session, loading]
   );

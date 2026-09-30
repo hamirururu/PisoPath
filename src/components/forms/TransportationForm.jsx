@@ -10,21 +10,26 @@ import TextField from "../ui/TextField";
 import TextArea from "../ui/TextArea";
 import Card from "../ui/Card";
 import { TRANSPORT_TYPES } from "../../lib/categories";
-import { createTransportationExpense } from "../../services/expenseService";
+import { createTransportationExpense, updateTransportationExpense } from "../../services/expenseService";
 import { fetchFrequentRoutes, fetchFavoriteRoutes, saveFavoriteRoute } from "../../services/routeService";
 import { nowDateAndTime } from "../../utils/nowParts";
 
-export default function TransportationForm({ onBack }) {
+export default function TransportationForm({ onBack, expense, onSaved }) {
   const navigate = useNavigate();
-  const [type, setType] = useState(TRANSPORT_TYPES[0]);
-  const [start, setStart] = useState("");
-  const [destination, setDestination] = useState("");
-  const [fare, setFare] = useState("");
-  const [notes, setNotes] = useState("");
+  const isEdit = Boolean(expense);
+  const detail = isEdit
+    ? (Array.isArray(expense.transportation_details) ? expense.transportation_details[0] : expense.transportation_details)
+    : null;
+
+  const [type, setType] = useState(detail?.transportation_type || TRANSPORT_TYPES[0]);
+  const [start, setStart] = useState(detail?.starting_point || "");
+  const [destination, setDestination] = useState(detail?.destination || "");
+  const [fare, setFare] = useState(isEdit ? String(expense.amount) : "");
+  const [notes, setNotes] = useState(expense?.notes || "");
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
-  const { date, time } = nowDateAndTime();
-  const [expenseDate, setExpenseDate] = useState(date);
-  const [expenseTime, setExpenseTime] = useState(time);
+  const defaults = nowDateAndTime();
+  const [expenseDate, setExpenseDate] = useState(expense?.expense_date || defaults.date);
+  const [expenseTime, setExpenseTime] = useState(expense?.expense_time?.slice(0, 5) || defaults.time);
 
   const [suggestions, setSuggestions] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -32,9 +37,10 @@ export default function TransportationForm({ onBack }) {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    if (isEdit) return; // no need for quick-fill suggestions while editing
     fetchFrequentRoutes().then(setSuggestions).catch(() => setSuggestions([]));
     fetchFavoriteRoutes().then(setFavorites).catch(() => setFavorites([]));
-  }, []);
+  }, [isEdit]);
 
   function applyRoute(route) {
     setType(route.transportation_type);
@@ -60,29 +66,40 @@ export default function TransportationForm({ onBack }) {
 
     setSubmitting(true);
     try {
-      const clientId = crypto.randomUUID();
-      await createTransportationExpense({
-        transportationType: type,
-        startingPoint: start.trim(),
-        destination: destination.trim(),
-        fare: numericFare,
-        date: expenseDate,
-        time: expenseTime,
-        notes,
-        clientId,
-      });
-
-      if (saveAsFavorite) {
-        await saveFavoriteRoute({
+      if (isEdit) {
+        await updateTransportationExpense(expense.id, {
           transportationType: type,
           startingPoint: start.trim(),
           destination: destination.trim(),
-          defaultFare: numericFare,
-        }).catch(() => {}); // non-critical if it fails
+          fare: numericFare,
+          date: expenseDate,
+          time: expenseTime,
+          notes,
+        });
+        toast.success("Transportation expense updated!");
+        onSaved?.();
+      } else {
+        await createTransportationExpense({
+          transportationType: type,
+          startingPoint: start.trim(),
+          destination: destination.trim(),
+          fare: numericFare,
+          date: expenseDate,
+          time: expenseTime,
+          notes,
+          clientId: crypto.randomUUID(),
+        });
+        if (saveAsFavorite) {
+          await saveFavoriteRoute({
+            transportationType: type,
+            startingPoint: start.trim(),
+            destination: destination.trim(),
+            defaultFare: numericFare,
+          }).catch(() => {});
+        }
+        toast.success("Transportation expense saved!");
+        navigate("/", { replace: true });
       }
-
-      toast.success("Transportation expense saved!");
-      navigate("/", { replace: true });
     } catch (err) {
       toast.error(err.message || "Could not save this expense.");
     } finally {
@@ -93,8 +110,13 @@ export default function TransportationForm({ onBack }) {
   const routeOptions = [...favorites, ...suggestions].slice(0, 5);
 
   return (
-    <FormShell title="Transportation" onBack={onBack} onSubmit={handleSubmit} submitting={submitting}>
-      {routeOptions.length > 0 && (
+    <FormShell
+      title={isEdit ? "Edit Transportation" : "Transportation"}
+      onBack={onBack}
+      onSubmit={handleSubmit}
+      submitting={submitting}
+    >
+      {!isEdit && routeOptions.length > 0 && (
         <Card className="p-4">
           <p className="mb-3 text-xs font-medium text-earth-dark">Quick fill from a recent route</p>
           <div className="flex flex-wrap gap-2">
@@ -129,15 +151,17 @@ export default function TransportationForm({ onBack }) {
       />
       <TextArea label="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any additional details" />
 
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={saveAsFavorite}
-          onChange={(e) => setSaveAsFavorite(e.target.checked)}
-          className="size-4 rounded accent-[#8A7650]"
-        />
-        <Star size={14} className="text-earth-dark" /> Save this route as a favorite
-      </label>
+      {!isEdit && (
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={saveAsFavorite}
+            onChange={(e) => setSaveAsFavorite(e.target.checked)}
+            className="size-4 rounded accent-[#8A7650]"
+          />
+          <Star size={14} className="text-earth-dark" /> Save this route as a favorite
+        </label>
+      )}
     </FormShell>
   );
 }

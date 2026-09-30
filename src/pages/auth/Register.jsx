@@ -6,6 +6,7 @@ import Alert from "../../components/ui/Alert";
 import Button from "../../components/ui/Button";
 import TextField from "../../components/ui/TextField";
 import PasswordField from "../../components/ui/PasswordField";
+import ResendConfirmation from "../../components/auth/ResendConfirmation";
 import { useAuth } from "../../hooks/useAuth";
 
 export default function Register() {
@@ -35,9 +36,7 @@ export default function Register() {
     setSubmitting(true);
     try {
       const data = await signUp(email.trim(), password, fullName.trim());
-      // With email confirmation ON there is no session yet.
       if (!data.session) setNeedsConfirmation(true);
-      // With confirmation OFF the session exists and PublicRoute redirects.
     } catch (err) {
       setError(err.message || "Could not create your account.");
     } finally {
@@ -55,12 +54,16 @@ export default function Register() {
           </Link>
         }
       >
-        <div className="flex flex-col items-center gap-3 text-center">
+        <div className="flex flex-col items-center gap-4 text-center">
           <MailCheck className="text-sage" size={36} />
           <p className="text-sm">
-            We sent a confirmation link to <strong>{email}</strong>. Open it to
-            activate your account, then sign in.
+            We sent a confirmation link to <strong>{email}</strong>. Open it on
+            this device to activate your account.
           </p>
+          <p className="text-xs text-earth-dark">
+            Didn't get it? Check spam, or:
+          </p>
+          <ResendConfirmation email={email} />
         </div>
       </AuthLayout>
     );

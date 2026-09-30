@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Bus, ShoppingBag, UtensilsCrossed } from "lucide-react";
 import Card from "../components/ui/Card";
 import TransportationForm from "../components/forms/TransportationForm";
@@ -6,17 +7,39 @@ import FoodForm from "../components/forms/FoodForm";
 import OtherExpenseForm from "../components/forms/OtherExpenseForm";
 
 const options = [
-  { key: "transportation", label: "Transportation", icon: Bus, desc: "Jeepney, Grab, MRT, and more" },
-  { key: "food", label: "Food", icon: UtensilsCrossed, desc: "Meals, snacks, and drinks" },
+  { key: "Transportation", label: "Transportation", icon: Bus, desc: "Jeepney, Grab, MRT, and more" },
+  { key: "Food", label: "Food", icon: UtensilsCrossed, desc: "Meals, snacks, and drinks" },
   { key: "other", label: "Other Expenses", icon: ShoppingBag, desc: "Shopping, bills, and everything else" },
 ];
 
 export default function AddExpense() {
-  const [selected, setSelected] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const editingExpense = location.state?.expense || null;
 
-  if (selected === "transportation") return <TransportationForm onBack={() => setSelected(null)} />;
-  if (selected === "food") return <FoodForm onBack={() => setSelected(null)} />;
-  if (selected === "other") return <OtherExpenseForm onBack={() => setSelected(null)} />;
+  const initialSelected = editingExpense
+    ? (editingExpense.category === "Transportation" || editingExpense.category === "Food"
+        ? editingExpense.category
+        : "other")
+    : null;
+
+  const [selected, setSelected] = useState(initialSelected);
+
+  function goBack() {
+    if (editingExpense) navigate("/history");
+    else setSelected(null);
+  }
+
+  function afterEditSaved() {
+    navigate("/history");
+  }
+
+  if (selected === "Transportation")
+    return <TransportationForm onBack={goBack} expense={editingExpense || undefined} onSaved={afterEditSaved} />;
+  if (selected === "Food")
+    return <FoodForm onBack={goBack} expense={editingExpense || undefined} onSaved={afterEditSaved} />;
+  if (selected === "other")
+    return <OtherExpenseForm onBack={goBack} expense={editingExpense || undefined} onSaved={afterEditSaved} />;
 
   return (
     <section className="space-y-5">

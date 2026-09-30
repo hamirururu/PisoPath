@@ -100,3 +100,86 @@ export async function createOtherExpense({
   });
   if (error) throw error;
 }
+
+export async function fetchExpenseById(id) {
+  const { data, error } = await supabase
+    .from("expenses")
+    .select(SELECT_WITH_TRANSPORT)
+    .eq("id", id)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteExpense(id) {
+  // transportation_details rows cascade automatically via the FK
+  const { error } = await supabase.from("expenses").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function updateTransportationExpense(id, {
+  transportationType, startingPoint, destination, fare, date, time, notes,
+}) {
+  const { error: expenseError } = await supabase
+    .from("expenses")
+    .update({
+      expense_name: `${transportationType} fare`,
+      amount: fare,
+      expense_date: date,
+      expense_time: time,
+      notes: notes || null,
+    })
+    .eq("id", id);
+  if (expenseError) throw expenseError;
+
+  const { error: detailError } = await supabase
+    .from("transportation_details")
+    .update({
+      transportation_type: transportationType,
+      starting_point: startingPoint,
+      destination,
+    })
+    .eq("expense_id", id);
+  if (detailError) throw detailError;
+}
+
+export async function updateFoodExpense(id, { storeName, itemName, category, amount, date, time, notes }) {
+  const { error } = await supabase
+    .from("expenses")
+    .update({
+      expense_name: itemName,
+      store_name: storeName,
+      subcategory: category,
+      amount,
+      expense_date: date,
+      expense_time: time,
+      notes: notes || null,
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function updateOtherExpense(id, { expenseName, category, amount, date, time, notes }) {
+  const { error } = await supabase
+    .from("expenses")
+    .update({
+      expense_name: expenseName,
+      category,
+      amount,
+      expense_date: date,
+      expense_time: time,
+      notes: notes || null,
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function fetchAllExpensesFull() {
+  const { data, error } = await supabase
+    .from("expenses")
+    .select(SELECT_WITH_TRANSPORT)
+    .order("expense_date", { ascending: false })
+    .order("expense_time", { ascending: false });
+  if (error) throw error;
+  return data;
+}
