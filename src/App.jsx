@@ -3,6 +3,8 @@ import AppLayout from "./layouts/AppLayout";
 import ProtectedRoute from "./components/routing/ProtectedRoute";
 import PublicRoute from "./components/routing/PublicRoute";
 import Alert from "./components/ui/Alert";
+import UpdatePrompt from "./components/ui/UpdatePrompt";
+import NotificationWatcher from "./components/ui/NotificationWatcher";
 import { configError } from "./lib/supabase";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -29,30 +31,38 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      <Route element={<PublicRoute />}>
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
-        <Route path="forgot-password" element={<ForgotPassword />} />
-      </Route>
-
-      {/* Standalone: reached via email links, not gated by session state */}
-      <Route path="reset-password" element={<ResetPassword />} />
-      <Route path="auth/callback" element={<AuthCallback />} />
-
-      <Route element={<ProtectedRoute />}>
-        <Route element={<AppLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="add" element={<AddExpense />} />
-          <Route path="history" element={<History />} />
-          <Route path="transportation" element={<Transportation />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="budgets" element={<Budgets />} />
-          <Route path="settings" element={<Settings />} />
+    <>
+      <Routes>
+        {/* Only for signed-out users */}
+        <Route element={<PublicRoute />}>
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
         </Route>
-      </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Standalone: reached via email links, not gated by session state */}
+        <Route path="reset-password" element={<ResetPassword />} />
+        <Route path="auth/callback" element={<AuthCallback />} />
+
+        {/* Only for signed-in users */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="add" element={<AddExpense />} />
+            <Route path="history" element={<History />} />
+            <Route path="transportation" element={<Transportation />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="budgets" element={<Budgets />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      {/* Outside <Routes> so they can appear on any screen. */}
+      <NotificationWatcher />
+      <UpdatePrompt />
+    </>
   );
 }

@@ -4,6 +4,7 @@ import BottomNav from "../components/navigation/BottomNav";
 import Avatar from "../components/ui/Avatar";
 import Logo from "../components/ui/Logo";
 import OfflineBanner from "../components/ui/OfflineBanner";
+import NotificationBell from "../components/ui/NotificationBell";
 import { APP_NAME } from "../lib/navigation";
 import { useAuth } from "../hooks/useAuth";
 
@@ -21,13 +22,16 @@ export default function AppLayout() {
             <Logo size={36} />
             <span className="font-semibold">{APP_NAME}</span>
           </div>
-          <Link to="/settings" aria-label="Profile and settings">
-            <Avatar
-              url={user?.user_metadata?.avatar_url}
-              name={user?.user_metadata?.full_name || user?.email}
-              size={32}
-            />
-          </Link>
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <Link to="/settings" aria-label="Profile and settings">
+              <Avatar
+                url={user?.user_metadata?.avatar_url}
+                name={user?.user_metadata?.full_name || user?.email}
+                size={32}
+              />
+            </Link>
+          </div>
         </header>
 
         <main className="mx-auto max-w-5xl px-4 pb-32 pt-5 lg:px-8 lg:pb-10 lg:pt-8">
