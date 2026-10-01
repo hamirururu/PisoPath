@@ -1,10 +1,40 @@
+import { useEffect, useRef } from "react";
 import { RefreshCw, X } from "lucide-react";
 import { usePwaUpdate } from "../../hooks/usePwaUpdate";
+import { useNotificationsStore } from "../../hooks/useNotifications";
+import { KIND } from "../../lib/notifications";
 
 // Rendered app-wide. The service worker downloads a new version in the
 // background, so we only interrupt once it is actually ready to be applied.
 export default function UpdatePrompt() {
   const { needRefresh, reloadNow, dismiss } = usePwaUpdate();
+  const { ingest } = useNotificationsStore();
+  // Track which build we've already announced so a reload that finds nothing new
+  // doesn't re-notify on every visit.
+  const announced = useRef(null);
+
+  useEffect(() => {
+    if (!needRefresh) return;
+
+    (async () => {
+      const registration = await navigator.serviceWorker?.getRegistration();
+      // The registration's script URL changes with each deploy, so it identifies
+      // the build far better than the boolean flag, which never varies.
+      const stamp = registration?.active?.scriptURL || registration?.installing?.scriptURL || "unknown";
+      if (!stamp || announced.current === stamp) return;
+      announced.current = stamp;
+
+      ingest([
+        {
+          key: `update:${stamp}`,
+          kind: KIND.UPDATE,
+          tone: "info",
+          title: "Update available",
+          body: "A new version of PisoPath is ready. Reload to use it.",
+        },
+      ]);
+    })();
+  }, [needRefresh, ingest]);
 
   if (!needRefresh) return null;
 

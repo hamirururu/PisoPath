@@ -7,9 +7,13 @@ import OfflineBanner from "../components/ui/OfflineBanner";
 import NotificationBell from "../components/ui/NotificationBell";
 import { APP_NAME } from "../lib/navigation";
 import { useAuth } from "../hooks/useAuth";
+import { useScrollToTop } from "../hooks/useScrollToTop";
 
 export default function AppLayout() {
   const { user } = useAuth();
+  // Navigating from a notification lands on a new page at the old scroll offset,
+  // which puts the sticky header off-screen.
+  useScrollToTop();
 
   return (
     <div className="min-h-dvh">

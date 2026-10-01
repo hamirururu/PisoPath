@@ -8,7 +8,10 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: "autoUpdate",
+      // "prompt" keeps the old build cached until the user accepts, so the
+      // update notification can fire. "autoUpdate" reloads silently instead,
+      // which leaves nothing to notify about.
+      registerType: "prompt",
       includeAssets: [
   "icons/icon-192.png",
   "icons/icon-512.png",
