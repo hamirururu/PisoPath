@@ -183,3 +183,14 @@ export async function fetchAllExpensesFull() {
   if (error) throw error;
   return data;
 }
+
+export async function fetchTransportationExpenses() {
+  const { data, error } = await supabase
+    .from("expenses")
+    .select(SELECT_WITH_TRANSPORT)
+    .eq("category", "Transportation")
+    .order("expense_date", { ascending: false })
+    .order("expense_time", { ascending: false });
+  if (error) throw error;
+  return data;
+}

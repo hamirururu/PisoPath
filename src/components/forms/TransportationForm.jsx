@@ -16,7 +16,7 @@ import { nowDateAndTime } from "../../utils/nowParts";
 
 export default function TransportationForm({ onBack, expense, onSaved }) {
   const navigate = useNavigate();
-  const isEdit = Boolean(expense);
+  const isEdit = Boolean(expense?.id);
   const detail = isEdit
     ? (Array.isArray(expense.transportation_details) ? expense.transportation_details[0] : expense.transportation_details)
     : null;

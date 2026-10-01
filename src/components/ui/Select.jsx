@@ -5,9 +5,11 @@ export default function Select({ label, hint, className = "", children, ...props
   const id = useId();
   return (
     <div className={className}>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-medium">
-        {label}
-      </label>
+      {label && (
+        <label htmlFor={id} className="mb-1.5 block text-sm font-medium">
+          {label}
+        </label>
+      )}
       <div className="relative">
         <select
           id={id}
