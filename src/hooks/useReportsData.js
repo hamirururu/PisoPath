@@ -14,7 +14,11 @@ export function useReportsData(range) {
       const rows = await fetchExpensesBetween(range.start, range.end);
       setReport(buildReport(rows, range.start, range.end));
     } catch (err) {
-      setError(err.message || "Could not load report data.");
+      setError(
+  !navigator.onLine
+    ? "You're offline. Connect to the internet to load your data."
+    : err.message || "Could not load ... ."
+);
     } finally {
       setLoading(false);
     }

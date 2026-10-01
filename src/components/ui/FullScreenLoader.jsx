@@ -1,9 +1,7 @@
-import { LoaderCircle } from "lucide-react";
+import SplashScreen from "./SplashScreen";
+import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 
 export default function FullScreenLoader() {
-  return (
-    <div className="grid min-h-dvh place-items-center">
-      <LoaderCircle className="animate-spin text-earth" size={32} aria-label="Loading" />
-    </div>
-  );
+  const online = useOnlineStatus();
+  return <SplashScreen message={online ? "Loading…" : "Waiting for a connection…"} />;
 }

@@ -25,7 +25,11 @@ export function useExpenseHistory() {
       if (error) throw error;
       setExpenses(data);
     } catch (err) {
-      setError(err.message || "Could not load your expenses.");
+      setError(
+  !navigator.onLine
+    ? "You're offline. Connect to the internet to load your data."
+    : err.message || "Could not load ... ."
+);
     } finally {
       setLoading(false);
     }

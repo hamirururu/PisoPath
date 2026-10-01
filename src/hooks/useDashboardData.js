@@ -93,7 +93,9 @@ export function useDashboardData() {
       setState((s) => ({
         ...s,
         loading: false,
-        error: err.message || "Could not load dashboard data.",
+        error: !navigator.onLine
+  ? "You're offline. Connect to the internet to load your expenses."
+  : err.message || "Could not load dashboard data.",
       }));
     }
   }, []);

@@ -36,7 +36,11 @@ export function useBudgetsData(month, year) {
       setSpentByCategory(byCategory);
       setTotalSpent(total);
     } catch (err) {
-      setError(err.message || "Could not load budgets.");
+      setError(
+  !navigator.onLine
+    ? "You're offline. Connect to the internet to load your data."
+    : err.message || "Could not load ... ."
+);
     } finally {
       setLoading(false);
     }

@@ -29,7 +29,11 @@ export function useTransportationData() {
       setFavorites(fav);
       setFrequent(freq);
     } catch (err) {
-      setError(err.message || "Could not load transportation data.");
+      setError(
+  !navigator.onLine
+    ? "You're offline. Connect to the internet to load your data."
+    : err.message || "Could not load ... ."
+);
     } finally {
       setLoading(false);
     }

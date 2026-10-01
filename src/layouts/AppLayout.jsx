@@ -3,6 +3,7 @@ import Sidebar from "../components/navigation/Sidebar";
 import BottomNav from "../components/navigation/BottomNav";
 import Avatar from "../components/ui/Avatar";
 import Logo from "../components/ui/Logo";
+import OfflineBanner from "../components/ui/OfflineBanner";
 import { APP_NAME } from "../lib/navigation";
 import { useAuth } from "../hooks/useAuth";
 
@@ -11,6 +12,7 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-dvh">
+      <OfflineBanner />
       <Sidebar />
 
       <div className="lg:pl-64">
