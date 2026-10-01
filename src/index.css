@@ -39,6 +39,32 @@
   }
 }
 
+/* Notification panel: enters from slightly above with a subtle scale-down,
+   settles, and reverses on close. These animate ONLY translateY and scale —
+   horizontal centring lives on a separate outer wrapper, so nothing here can
+   shift the panel sideways. */
+@keyframes notif-in {
+  from {
+    transform: translateY(-8px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes notif-out {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-8px) scale(0.98);
+    opacity: 0;
+  }
+}
+
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
@@ -56,11 +82,19 @@
   .animate-banner-text {
     animation: banner-breathe 1.8s ease-in-out infinite;
   }
-  /* Respect a reduced-motion preference: keep the banner visible and legible,
-     just don't animate it. */
+  .animate-notif-in {
+    animation: notif-in 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .animate-notif-out {
+    animation: notif-out 220ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+  /* Respect a reduced-motion preference: keep things visible and legible,
+     just don't animate them. */
   @media (prefers-reduced-motion: reduce) {
     .animate-banner-in,
-    .animate-banner-text {
+    .animate-banner-text,
+    .animate-notif-in,
+    .animate-notif-out {
       animation: none;
     }
   }

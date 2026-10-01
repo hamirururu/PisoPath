@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Bell, Check, Trash2, TriangleAlert, TrendingUp, Wallet } from "lucide-react";
+import { Bell, Check, Trash2, TriangleAlert, TrendingUp, Wallet, X } from "lucide-react";
 import { useNotificationsStore } from "../../hooks/useNotifications";
 import { KIND, toneClass } from "../../lib/notifications";
 
@@ -18,6 +19,22 @@ const targetFor = {
   [KIND.UPDATE]: "/",
 };
 
+// Positioning lives here and never animates: left-50% + translateX(-50%) holds
+// the panel centred no matter what the inner element is doing. Keeping the
+// centring transform off the animated element avoids a conflict — Tailwind v4's
+// -translate-x-1/2 sets the separate CSS `translate` property, which composes
+// with `transform` rather than being replaced by it, so animating `transform`
+// on the same element shifts it horizontally.
+const WRAP_CLASS =
+  "pointer-events-none fixed left-1/2 z-40 w-[calc(100vw-2rem)] max-w-sm " +
+  "-translate-x-1/2 top-[calc(env(safe-area-inset-top)+4.25rem)]";
+
+// Only opacity / translateY / scale are animated here.
+const ANIM_CLASS = {
+  in: "animate-notif-in",
+  out: "animate-notif-out",
+};
+
 function when(ts) {
   const diff = Date.now() - ts;
   if (diff < 60000) return "just now";
@@ -29,14 +46,39 @@ function when(ts) {
 export default function NotificationBell() {
   const { items, unreadCount, markAllRead, markRead, remove, clearAll } = useNotificationsStore();
   const [open, setOpen] = useState(false);
-  const panelRef = useRef(null);
+  // Kept mounted through the exit animation, then unmounted.
+  const [rendered, setRendered] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const dialogRef = useRef(null);
   const navigate = useNavigate();
+
+  const show = () => {
+    setOpen(true);
+    setRendered(true);
+    setClosing(false);
+  };
+
+  const hide = () => {
+    setOpen(false);
+    setClosing(true);
+  };
+
+  useEffect(() => {
+    if (!rendered || !closing) return;
+    // Must match the notif-out duration in index.css, or the panel unmounts
+    // mid-animation and the fade is cut short.
+    const t = setTimeout(() => {
+      setRendered(false);
+      setClosing(false);
+    }, 220);
+    return () => clearTimeout(t);
+  }, [rendered, closing]);
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    const onKey = (e) => e.key === "Escape" && hide();
     const onClick = (e) => {
-      if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false);
+      if (dialogRef.current && !dialogRef.current.contains(e.target)) hide();
     };
     document.addEventListener("keydown", onKey);
     document.addEventListener("mousedown", onClick);
@@ -47,11 +89,14 @@ export default function NotificationBell() {
   }, [open]);
 
   return (
-    <div className="relative" ref={panelRef}>
+    <>
       <button
         onClick={() => {
-          setOpen((v) => !v);
-          if (!open) markAllRead();
+          if (open) hide();
+          else {
+            show();
+            markAllRead();
+          }
         }}
         aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ""}`}
         aria-expanded={open}
@@ -65,72 +110,88 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {open && (
-        <>
-          {/* Arrow points up at the bell, inset to match the button's centre. */}
-          <span
-            aria-hidden="true"
-            className="absolute left-1/2 top-full z-50 size-3 -translate-x-1/2 -translate-y-1.5 rotate-45 bg-paper ring-1 ring-beige [clip-path:polygon(100%_0,100%_100%,0_100%)]"
-          />
-          <div className="animate-banner-in absolute left-1/2 z-50 mt-3 w-80 -translate-x-1/2 overflow-hidden rounded-3xl bg-paper shadow-xl ring-1 ring-beige">
+      {/* Portal to body: the header uses backdrop-blur, which makes it a
+          containing block for fixed positioning. Without this the panel would
+          anchor to the header instead of the viewport. */}
+      {rendered &&
+        createPortal(
+          <div className={WRAP_CLASS}>
+            <div
+              ref={dialogRef}
+              role="dialog"
+              aria-label="Notifications"
+              className={`pointer-events-auto overflow-hidden rounded-3xl bg-paper shadow-xl ring-1 ring-beige ${
+                closing ? ANIM_CLASS.out : ANIM_CLASS.in
+              }`}
+            >
             <div className="flex items-center justify-between border-b border-beige px-4 py-3">
               <p className="text-sm font-semibold">Notifications</p>
-              {items.length > 0 && (
+              <div className="flex items-center gap-2">
+                {items.length > 0 && (
+                  <button
+                    onClick={clearAll}
+                    className="text-xs font-medium text-earth-dark underline"
+                  >
+                    Clear all
+                  </button>
+                )}
                 <button
-                  onClick={clearAll}
-                  className="text-xs font-medium text-earth-dark underline"
+                  onClick={hide}
+                  aria-label="Close notifications"
+                  className="grid size-8 place-items-center rounded-full text-earth-dark hover:bg-beige/50"
                 >
-                  Clear all
+                  <X size={16} />
                 </button>
-              )}
+              </div>
             </div>
 
-          {items.length === 0 ? (
-            <p className="px-4 py-8 text-center text-sm text-earth-dark">
-              Nothing yet. Budget alerts and daily totals will show up here.
-            </p>
-          ) : (
-            <ul className="max-h-80 overflow-y-auto">
-            {items.map((n) => {
-              const Icon = iconFor[n.kind] ?? Bell;
-              return (
-                <li key={n.key} className="border-b border-beige/60 last:border-0">
-                  <div className="flex items-start gap-3 px-4 py-3">
-                    <button
-                      onClick={() => {
-                        markRead(n.key);
-                        setOpen(false);
-                        navigate(targetFor[n.kind] ?? "/");
-                      }}
-                      className="flex min-w-0 flex-1 items-start gap-3 text-left"
-                    >
-                      <span className={`mt-0.5 shrink-0 ${toneClass[n.tone]}`}>
-                        <Icon size={16} />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-sm font-medium">{n.title}</span>
-                        <span className="block text-xs text-earth-dark">{n.body}</span>
-                        <span className="mt-0.5 block text-[11px] text-earth-dark/70">
-                          {when(n.at)}
-                        </span>
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => remove(n.key)}
-                      aria-label={`Dismiss ${n.title}`}
-                      className="shrink-0 rounded-full p-1 text-earth-dark/70 hover:bg-beige/60"
-                    >
-                      {n.read ? <Trash2 size={13} /> : <Check size={13} />}
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          )}
-          </div>
-        </>
-      )}
-    </div>
+            {items.length === 0 ? (
+              <p className="px-4 py-8 text-center text-sm text-earth-dark">
+                Nothing yet. Budget alerts and daily totals will show up here.
+              </p>
+            ) : (
+              <ul className="max-h-[60vh] overflow-y-auto">
+                {items.map((n) => {
+                  const Icon = iconFor[n.kind] ?? Bell;
+                  return (
+                    <li key={n.key} className="border-b border-beige/60 last:border-0">
+                      <div className="flex items-start gap-3 px-4 py-3">
+                        <button
+                          onClick={() => {
+                            markRead(n.key);
+                            hide();
+                            navigate(targetFor[n.kind] ?? "/");
+                          }}
+                          className="flex min-w-0 flex-1 items-start gap-3 text-left"
+                        >
+                          <span className={`mt-0.5 shrink-0 ${toneClass[n.tone]}`}>
+                            <Icon size={16} />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-sm font-medium">{n.title}</span>
+                            <span className="block text-xs text-earth-dark">{n.body}</span>
+                            <span className="mt-0.5 block text-[11px] text-earth-dark/70">
+                              {when(n.at)}
+                            </span>
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => remove(n.key)}
+                          aria-label={`Dismiss ${n.title}`}
+                          className="shrink-0 rounded-full p-1 text-earth-dark/70 hover:bg-beige/60"
+                        >
+                          {n.read ? <Trash2 size={13} /> : <Check size={13} />}
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
   );
 }
