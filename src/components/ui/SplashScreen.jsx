@@ -5,7 +5,7 @@ export default function SplashScreen({ message }) {
   return (
     <div className="grid min-h-dvh place-items-center bg-cream px-6">
       <div className="flex flex-col items-center gap-4 text-center">
-        <Logo size={88} rounded="rounded-[20px]" className="shadow-md" />
+        <Logo size={88} rounded="rounded-[40px]" className="shadow-md" />
         <div>
           <p className="text-lg font-semibold">{APP_NAME}</p>
           <p className="text-xs text-earth-dark">Track every peso.</p>
