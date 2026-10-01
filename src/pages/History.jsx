@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { History as HistoryIcon, LoaderCircle } from "lucide-react";
+import { History as HistoryIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import Alert from "../components/ui/Alert";
 import EmptyState from "../components/ui/EmptyState";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import Spinner from "../components/ui/Spinner";
 import ExpenseGroup from "../components/history/ExpenseGroup";
 import { useExpenseHistory } from "../hooks/useExpenseHistory";
 import { deleteExpense } from "../services/expenseService";
@@ -58,11 +59,11 @@ export default function History() {
 
       {error && <Alert variant="error">{error}</Alert>}
 
-      {loading ? (
-        <div className="flex justify-center py-16 text-earth-dark">
-          <LoaderCircle className="animate-spin" size={28} />
-        </div>
-      ) : dates.length === 0 ? (
+{loading ? (
+  <div className="flex justify-center py-16">
+    <Spinner size={36} />
+  </div>
+) : dates.length === 0 ? (
         <EmptyState icon={HistoryIcon} text="No expenses recorded yet. Add your first one to see it here." />
       ) : (
         <div className="space-y-6">

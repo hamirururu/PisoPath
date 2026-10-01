@@ -1,11 +1,12 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { LoaderCircle, Plus, Wallet } from "lucide-react";
+import { Plus, Wallet } from "lucide-react";
 import Card from "../components/ui/Card";
 import Alert from "../components/ui/Alert";
 import Button from "../components/ui/Button";
 import Select from "../components/ui/Select";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import Spinner from "../components/ui/Spinner";
 import BudgetProgress from "../components/budgets/BudgetProgress";
 import BudgetFormDialog from "../components/budgets/BudgetFormDialog";
 import { useBudgetsData } from "../hooks/useBudgetsData";
@@ -86,11 +87,11 @@ export default function Budgets() {
 
       {error && <Alert variant="error">{error}</Alert>}
 
-      {loading ? (
-        <div className="flex justify-center py-16 text-earth-dark">
-          <LoaderCircle className="animate-spin" size={28} />
-        </div>
-      ) : (
+{loading ? (
+  <div className="flex justify-center py-16">
+    <Spinner size={36} />
+  </div>
+) : (
         <>
           <Card>
             <h2 className="mb-4 flex items-center gap-2 font-semibold">

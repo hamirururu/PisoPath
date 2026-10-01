@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LoaderCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import Alert from "../components/ui/Alert";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import Spinner from "../components/ui/Spinner";
 import TransportSummaryCards from "../components/transportation/TransportSummaryCards";
 import FavoriteRoutes from "../components/transportation/FavoriteRoutes";
 import TransportFilters from "../components/transportation/TransportFilters";
@@ -78,11 +78,11 @@ export default function Transportation() {
 
       {error && <Alert variant="error">{error}</Alert>}
 
-      {loading ? (
-        <div className="flex justify-center py-16 text-earth-dark">
-          <LoaderCircle className="animate-spin" size={28} />
-        </div>
-      ) : (
+{loading ? (
+  <div className="flex justify-center py-16">
+    <Spinner size={36} />
+  </div>
+) : (
         <>
           <TransportSummaryCards totals={totals} />
           <FavoriteRoutes routes={favorites} onUse={handleUseFavorite} onRemove={removeFavorite} />

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import {
-  Bus, CalendarDays, LoaderCircle, Plus, RefreshCw, ShoppingBag, Tag,
+  Bus, CalendarDays, Plus, RefreshCw, ShoppingBag, Tag,
   UtensilsCrossed, Wallet,
 } from "lucide-react";
 import Button from "../components/ui/Button";
@@ -13,6 +13,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useDashboardData } from "../hooks/useDashboardData";
 import { formatLongDate, formatPeso } from "../utils/format";
 import Avatar from "../components/ui/Avatar";
+import Spinner from "../components/ui/Spinner";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -48,11 +49,11 @@ export default function Dashboard() {
 
       {error && <Alert variant="error">{error}</Alert>}
 
-      {loading ? (
-        <div className="flex items-center justify-center py-16 text-earth-dark">
-          <LoaderCircle className="animate-spin" size={28} />
-        </div>
-      ) : (
+{loading ? (
+  <div className="flex items-center justify-center py-16">
+    <Spinner size={36} />
+  </div>
+) : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <SummaryCard label="Today" amount={formatPeso(summary.today)} icon={CalendarDays} emphasis />

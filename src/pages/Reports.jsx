@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { CalendarRange, LoaderCircle, Receipt, TrendingUp, Wallet } from "lucide-react";
+import { CalendarRange, Receipt, TrendingUp, Wallet } from "lucide-react";
 import Alert from "../components/ui/Alert";
 import RangeFilter from "../components/reports/RangeFilter";
 import SpendingTrendChart from "../components/reports/SpendingTrendChart";
 import BreakdownCard from "../components/reports/BreakdownCard";
 import SummaryCard from "../components/dashboard/SummaryCard";
+import Spinner from "../components/ui/Spinner";
 import { buildPresetRanges } from "../lib/reportRanges";
 import { useReportsData } from "../hooks/useReportsData";
 import { getCategoryIcon, getTransportIcon } from "../lib/categoryIcons";
@@ -25,11 +26,11 @@ export default function Reports() {
 
       {error && <Alert variant="error">{error}</Alert>}
 
-      {loading || !report ? (
-        <div className="flex justify-center py-16 text-earth-dark">
-          <LoaderCircle className="animate-spin" size={28} />
-        </div>
-      ) : (
+{loading || !report ? (
+  <div className="flex justify-center py-16">
+    <Spinner size={36} />
+  </div>
+) : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <SummaryCard label="Total spent" amount={formatPeso(report.totalSpent)} icon={Wallet} emphasis />
