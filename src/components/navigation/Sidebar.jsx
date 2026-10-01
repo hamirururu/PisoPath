@@ -1,7 +1,9 @@
 import { NavLink } from "react-router-dom";
-import { LogOut, Wallet } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { APP_NAME, desktopNav } from "../../lib/navigation";
 import { useAuth } from "../../hooks/useAuth";
+import Avatar from "../ui/Avatar";
+import Logo from "../ui/Logo";
 
 export default function Sidebar() {
   const { user, signOut } = useAuth();
@@ -9,9 +11,7 @@ export default function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-beige bg-paper p-5 lg:flex">
       <div className="mb-8 flex items-center gap-3 px-2">
-        <span className="grid size-10 place-items-center rounded-2xl bg-earth text-cream">
-          <Wallet size={20} />
-        </span>
+        <Logo size={40} />
         <div>
           <p className="font-semibold leading-tight">{APP_NAME}</p>
           <p className="text-xs text-earth-dark">Expense Tracker</p>
@@ -37,10 +37,17 @@ export default function Sidebar() {
       </nav>
 
       <div className="border-t border-beige pt-4">
-        <p className="truncate px-2 text-xs text-earth-dark">{user?.email}</p>
+        <div className="mb-2 flex items-center gap-2.5 px-1">
+          <Avatar
+            url={user?.user_metadata?.avatar_url}
+            name={user?.user_metadata?.full_name || user?.email}
+            size={32}
+          />
+          <p className="truncate text-xs text-earth-dark">{user?.email}</p>
+        </div>
         <button
           onClick={() => signOut()}
-          className="mt-2 flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium text-earth-dark transition-colors hover:bg-beige/50"
+          className="flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium text-earth-dark transition-colors hover:bg-beige/50"
         >
           <LogOut size={16} /> Sign out
         </button>

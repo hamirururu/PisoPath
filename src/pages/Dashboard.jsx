@@ -12,6 +12,7 @@ import RecentTransactions from "../components/dashboard/RecentTransactions";
 import { useAuth } from "../hooks/useAuth";
 import { useDashboardData } from "../hooks/useDashboardData";
 import { formatLongDate, formatPeso } from "../utils/format";
+import Avatar from "../components/ui/Avatar";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -21,25 +22,29 @@ export default function Dashboard() {
 
   return (
     <section className="space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <button
-            onClick={reload}
-            className="flex items-center gap-1.5 text-sm text-earth-dark"
-          >
-            <CalendarDays size={14} /> {formatLongDate()}
-            <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
-          </button>
-          <h1 className="text-2xl font-semibold">
-            Welcome{firstName ? `, ${firstName}` : ""} 👋
-          </h1>
-        </div>
-        <Link to="/add">
-          <Button>
-            <Plus size={18} /> Quick Add Expense
-          </Button>
-        </Link>
-      </header>
+<header className="flex flex-wrap items-center justify-between gap-3">
+  <div className="flex items-center gap-3">
+    <Avatar
+      url={user?.user_metadata?.avatar_url}
+      name={user?.user_metadata?.full_name || user?.email}
+      size={44}
+    />
+    <div>
+      <button onClick={reload} className="flex items-center gap-1.5 text-sm text-earth-dark">
+        <CalendarDays size={14} /> {formatLongDate()}
+        <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+      </button>
+      <h1 className="text-2xl font-semibold">
+        Welcome{firstName ? `, ${firstName}` : ""} 👋
+      </h1>
+    </div>
+  </div>
+  <Link to="/add">
+    <Button>
+      <Plus size={18} /> Quick Add Expense
+    </Button>
+  </Link>
+</header>
 
       {error && <Alert variant="error">{error}</Alert>}
 
