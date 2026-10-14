@@ -1,72 +1,62 @@
-import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { api } from "../lib/api";
 import { AuthContext } from "./auth-context";
 
-const unwrap = ({ data, error }) => {
-  if (error) throw error;
-  return data;
-};
-
 export default function AuthProvider({ children }) {
-  const [session, setSession] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const lastCheck = useRef(0);
+
+  const refresh = useCallback(async () => {
+    lastCheck.current = Date.now();
+    try {
+      const data = await api.get("/api/auth/me");
+      setUser(data.user);
+    } catch {
+      /* network error: keep current state rather than logging out on a blip */
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    refresh();
+    const onUnauthorized = () => setUser(null);
+    const onRefreshUser = () => refresh();
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && Date.now() - lastCheck.current > 60_000) refresh();
+    };
+    window.addEventListener("pisopath:unauthorized", onUnauthorized);
+    window.addEventListener("pisopath:refresh-user", onRefreshUser);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("pisopath:unauthorized", onUnauthorized);
+      window.removeEventListener("pisopath:refresh-user", onRefreshUser);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [refresh]);
 
   const value = useMemo(
     () => ({
-      session,
-      user: session?.user ?? null,
+      user,
       loading,
-      signUp: async (email, password, fullName) =>
-        unwrap(
-          await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: { full_name: fullName },
-              emailRedirectTo: `${window.location.origin}/auth/callback`,
-            },
-          })
-        ),
-      signIn: async (email, password) =>
-        unwrap(await supabase.auth.signInWithPassword({ email, password })),
-      signOut: async () => {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
+      signUp: async (email, password, fullName) => {
+        const data = await api.post("/api/auth/signup", { email, password, fullName });
+        if (data.status === "signed_in") setUser(data.user);
+        return data;
       },
-      sendPasswordReset: async (email) =>
-        unwrap(
-          await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/reset-password`,
-          })
-        ),
-      updatePassword: async (password) =>
-        unwrap(await supabase.auth.updateUser({ password })),
-      resendConfirmation: async (email) =>
-        unwrap(
-          await supabase.auth.resend({
-            type: "signup",
-            email,
-            options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-          })
-        ),
+      signIn: async (email, password) => {
+        const data = await api.post("/api/auth/login", { email, password });
+        setUser(data.user);
+      },
+      signOut: async () => {
+        await api.post("/api/auth/logout").catch(() => {});
+        setUser(null);
+      },
+      sendPasswordReset: (email) => api.post("/api/auth/forgot", { email }),
+      updatePassword: (password) => api.post("/api/auth/update-password", { password }),
     }),
-    [session, loading]
+    [user, loading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

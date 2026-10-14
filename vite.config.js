@@ -55,17 +55,10 @@ icons: [
 ],
       },
       workbox: {
-        // App shell caching: lets the UI load even with no connection.
-        // Data itself still requires network, since this app reads/writes Supabase live.
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
         navigateFallback: "/index.html",
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) => url.origin === self.location.origin,
-            handler: "NetworkFirst",
-            options: { cacheName: "app-shell" },
-          },
-        ],
+        navigateFallbackDenylist: [/^\/api\//, /^\/auth\/confirm/],
+        // no runtimeCaching: API responses must never be cached
       },
     }),
   ],

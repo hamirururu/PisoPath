@@ -1,38 +1,44 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { LoaderCircle } from "lucide-react";
 import AuthLayout from "../../layouts/AuthLayout";
 import Alert from "../../components/ui/Alert";
 import Button from "../../components/ui/Button";
 import TextField from "../../components/ui/TextField";
 import PasswordField from "../../components/ui/PasswordField";
-import ResendConfirmation from "../../components/auth/ResendConfirmation";
 import { useAuth } from "../../hooks/useAuth";
+
+const NOTICES = {
+  link_expired:
+    "That confirmation link expired or was already used. Sign in, or register again for a fresh link.",
+  link_invalid: "That link isn't valid. Please request a new one.",
+};
 
 export default function Login() {
   const { signIn } = useAuth();
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const notice = NOTICES[params.get("notice")];
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [unconfirmed, setUnconfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (submitting) return;
     setError("");
-    setUnconfirmed(false);
     setSubmitting(true);
     try {
       await signIn(email.trim(), password);
+      // PublicRoute redirects automatically once the user is set
     } catch (err) {
-      const message = err.message || "Could not sign in. Please try again.";
-      if (message.toLowerCase().includes("confirm")) {
-        setUnconfirmed(true);
-        setError("Please confirm your email before signing in.");
-      } else {
-        setError(message);
+      if (err.code === "email_not_confirmed") {
+        navigate("/check-email", { replace: true });
+        return;
       }
+      setError(err.message || "Could not sign in. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -52,16 +58,8 @@ export default function Login() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <Alert variant="error">
-            <p>{error}</p>
-            {unconfirmed && (
-              <div className="mt-2">
-                <ResendConfirmation email={email.trim()} />
-              </div>
-            )}
-          </Alert>
-        )}
+        {notice && <Alert variant="info">{notice}</Alert>}
+        {error && <Alert variant="error">{error}</Alert>}
         <TextField
           label="Email"
           type="email"

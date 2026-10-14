@@ -99,3 +99,15 @@
     }
   }
 }
+
+@keyframes pp-float { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-6px) rotate(1deg); } }
+@keyframes pp-card-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes pp-pop { 0% { transform: scale(.6); opacity: 0; } 70% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }
+.pp-float { animation: pp-float 3.2s ease-in-out infinite; }
+.pp-card-in { animation: pp-card-in .45s ease-out both; }
+.pp-pop { animation: pp-pop .4s ease-out both; }
+.pp-ring { transition: stroke-dashoffset 1s linear; }
+@media (prefers-reduced-motion: reduce) {
+  .pp-float, .pp-card-in, .pp-pop { animation: none; }
+  .pp-ring { transition: none; }
+}

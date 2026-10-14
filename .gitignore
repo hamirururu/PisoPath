@@ -25,3 +25,6 @@ dist-ssr
 
 # Keep the template committed even though *.local is ignored above
 !.env.example
+
+.vercel
+.env*

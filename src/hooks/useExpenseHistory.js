@@ -1,11 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
-
-const SELECT_WITH_TRANSPORT = `
-  id, category, expense_name, store_name, subcategory, amount,
-  expense_date, expense_time, notes, created_at,
-  transportation_details ( transportation_type, starting_point, destination )
-`;
+import { fetchAllExpensesFull } from "../services/expenseService";
 
 export function useExpenseHistory() {
   const [expenses, setExpenses] = useState([]);
@@ -16,20 +10,14 @@ export function useExpenseHistory() {
     setLoading(true);
     setError("");
     try {
-      const { data, error } = await supabase
-        .from("expenses")
-        .select(SELECT_WITH_TRANSPORT)
-        .order("expense_date", { ascending: false })
-        .order("expense_time", { ascending: false })
-        .order("created_at", { ascending: false });
-      if (error) throw error;
+      const data = await fetchAllExpensesFull();
       setExpenses(data);
     } catch (err) {
       setError(
-  !navigator.onLine
-    ? "You're offline. Connect to the internet to load your data."
-    : err.message || "Could not load ... ."
-);
+        !navigator.onLine
+          ? "You're offline. Connect to the internet to load your data."
+          : err.message || "Could not load expenses."
+      );
     } finally {
       setLoading(false);
     }

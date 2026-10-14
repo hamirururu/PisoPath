@@ -10,7 +10,6 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
-import AuthCallback from "./pages/auth/AuthCallback";
 import Dashboard from "./pages/Dashboard";
 import AddExpense from "./pages/AddExpense";
 import History from "./pages/History";
@@ -18,6 +17,7 @@ import Transportation from "./pages/Transportation";
 import Reports from "./pages/Reports";
 import Budgets from "./pages/Budgets";
 import Settings from "./pages/Settings";
+import CheckEmail from "./pages/auth/CheckEmail";
 
 export default function App() {
   // A misconfigured build used to throw inside supabase.js before React mounted,
@@ -42,7 +42,7 @@ export default function App() {
 
         {/* Standalone: reached via email links, not gated by session state */}
         <Route path="reset-password" element={<ResetPassword />} />
-        <Route path="auth/callback" element={<AuthCallback />} />
+        <Route path="check-email" element={<CheckEmail />} />
 
         {/* Only for signed-in users */}
         <Route element={<ProtectedRoute />}>
