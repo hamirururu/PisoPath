@@ -25,7 +25,14 @@ async function request(method, path, body) {
     if (res.status === 401 && !path.startsWith("/api/auth/login")) {
       window.dispatchEvent(new Event("pisopath:unauthorized"));
     }
-    throw new ApiError(data?.error || "Something went wrong.", {
+    const raw = data?.error;
+    const message =
+      typeof raw === "string"
+        ? raw
+        : raw?.message
+          ? `Server error (${res.status}). Please try again.`
+          : "Something went wrong.";
+    throw new ApiError(message, {
       status: res.status, code: data?.code, retryAfter: data?.retryAfter,
     });
   }
