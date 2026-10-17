@@ -41,7 +41,11 @@ export default function Register() {
       // If status is "signed_in", AuthProvider has set the user and
       // PublicRoute redirects to the dashboard automatically.
     } catch (err) {
-      setError(err.message || "Could not create your account.");
+      setError(
+        err.status === 429 && err.retryAfter
+          ? `Too many attempts. Try again in ${err.retryAfter} seconds.`
+          : err.message || "Could not create your account."
+      );
     } finally {
       setSubmitting(false);
     }
