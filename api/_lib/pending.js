@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { parse } from "cookie";
+import { parse } from "./cookies.js";
 import { setCookie } from "./supabase.js";
 
 const NAME = "pp_pending";

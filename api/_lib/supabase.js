@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { parse, serialize } from "cookie";
+import { parse, serialize } from "./cookies.js";
 
 const MAX_AGE = 60 * 60 * 24 * 7;
 
