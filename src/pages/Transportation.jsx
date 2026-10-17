@@ -10,6 +10,7 @@ import TransportFilters from "../components/transportation/TransportFilters";
 import TransportHistoryList from "../components/transportation/TransportHistoryList";
 import { useTransportationData } from "../hooks/useTransportationData";
 import { deleteExpense } from "../services/expenseService";
+import { localISO } from "../utils/dates";
 
 export default function Transportation() {
   const { expenses, favorites, totals, loading, error, reload, removeFavorite, detailOf } =
@@ -33,25 +34,25 @@ export default function Transportation() {
     });
   }, [expenses, search, type, detailOf]);
 
-  function handleUseFavorite(route) {
-    navigate("/add", {
-      state: {
-        expense: {
-          category: "Transportation",
-          expense_date: new Date().toISOString().slice(0, 10),
-          expense_time: new Date().toTimeString().slice(0, 5),
-          amount: route.default_fare || "",
-          notes: "",
-          transportation_details: {
-            transportation_type: route.transportation_type,
-            starting_point: route.starting_point,
-            destination: route.destination,
-          },
-          id: undefined, // ensures AddExpense/forms treat this as a new entry, not an edit
+function handleUseFavorite(route) {
+  navigate("/add", {
+    state: {
+      expense: {
+        category: "Transportation",
+        expense_date: localISO(),
+        expense_time: new Date().toTimeString().slice(0, 5),
+        amount: route.default_fare || "",
+        notes: "",
+        transportation_details: {
+          transportation_type: route.transportation_type,
+          starting_point: route.starting_point,
+          destination: route.destination,
         },
+        id: undefined, // no id = treated as a new entry, not an edit
       },
-    });
-  }
+    },
+  });
+}
 
   function handleEdit(expense) {
     navigate("/add", { state: { expense } });

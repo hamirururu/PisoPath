@@ -5,6 +5,7 @@ import SettingsSection from "./SettingsSection";
 import Button from "../ui/Button";
 import { fetchAllExpensesFull } from "../../services/expenseService";
 import { expensesToCsv, downloadCsv } from "../../utils/csv";
+import { localISO } from "../../utils/dates";
 
 export default function ExportSection() {
   const [exporting, setExporting] = useState(false);
@@ -19,7 +20,7 @@ export default function ExportSection() {
         return;
       }
       const csv = expensesToCsv(rows);
-      const today = new Date().toISOString().slice(0, 10);
+      const today = localISO();
       downloadCsv(csv, `pisopath-expenses-${today}.csv`);
       toast.success("CSV exported.");
     } catch (err) {

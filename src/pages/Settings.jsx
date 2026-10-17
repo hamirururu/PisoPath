@@ -4,6 +4,7 @@ import CategoryManager from "../components/settings/CategoryManager";
 import ExportSection from "../components/settings/ExportSection";
 import InstallAppSection from "../components/settings/InstallAppSection";
 import DangerZone from "../components/settings/DangerZone";
+import NotificationsSection from "../components/settings/NotificationsSection";
 
 export default function Settings() {
   return (
@@ -12,6 +13,7 @@ export default function Settings() {
       <div className="grid gap-4 lg:grid-cols-2">
         <ProfileSection />
         <PreferencesSection />
+        <NotificationsSection />
         <CategoryManager />
         <ExportSection />
         <InstallAppSection />

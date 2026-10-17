@@ -14,6 +14,7 @@ import { useDashboardData } from "../hooks/useDashboardData";
 import { formatLongDate, formatPeso } from "../utils/format";
 import Avatar from "../components/ui/Avatar";
 import Spinner from "../components/ui/Spinner";
+import PetCard from "../components/pet/PetCard";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -46,6 +47,7 @@ export default function Dashboard() {
     </Button>
   </Link>
 </header>
+<PetCard />
 
       {error && <Alert variant="error">{error}</Alert>}
 

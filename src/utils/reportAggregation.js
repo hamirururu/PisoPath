@@ -1,4 +1,4 @@
-import { daysBetweenInclusive } from "./dates";
+import { daysBetweenInclusive, localISO } from "./dates";
 
 function detailOf(expense) {
   return Array.isArray(expense.transportation_details)
@@ -66,7 +66,7 @@ export function buildReport(rows, start, end) {
     const cursor = new Date(`${start}T00:00:00`);
     const endDate = new Date(`${end}T00:00:00`);
     while (cursor <= endDate) {
-      const iso = cursor.toISOString().slice(0, 10);
+      const iso = localISO(cursor);
       series.push({
         key: iso,
         label: cursor.toLocaleDateString("en-PH", { month: "short", day: "numeric" }),

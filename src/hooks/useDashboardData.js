@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  fetchAllAmounts,
-  fetchExpensesBetween,
-  fetchRecentExpenses,
-} from "../services/expenseService";
-import { startOfMonthISO, startOfWeekISO, toLocalISO, todayISO } from "../utils/dates";
+import {fetchAllAmounts, fetchExpensesBetween, fetchRecentExpenses } from "../services/expenseService";
+import { startOfMonthISO, startOfWeekISO, localISO as toLocalISO, todayISO } from "../utils/dates";
 
 const BUCKET_KEYS = ["Transportation", "Food", "Shopping"];
 

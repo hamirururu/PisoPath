@@ -55,6 +55,7 @@ icons: [
 ],
       },
       workbox: {
+        importScripts: ["/sw-extra.js"],
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/api\//, /^\/auth\/confirm/],

@@ -4,19 +4,18 @@ import BottomNav from "../components/navigation/BottomNav";
 import Avatar from "../components/ui/Avatar";
 import Logo from "../components/ui/Logo";
 import OfflineBanner from "../components/ui/OfflineBanner";
-import NotificationBell from "../components/ui/NotificationBell";
+import UpdateBanner from "../components/ui/UpdateBanner";
 import { APP_NAME } from "../lib/navigation";
 import { useAuth } from "../hooks/useAuth";
-import { useScrollToTop } from "../hooks/useScrollToTop";
+import { useSpendingNotifications } from "../hooks/useSpendingNotifications";
 
 export default function AppLayout() {
   const { user } = useAuth();
-  // Navigating from a notification lands on a new page at the old scroll offset,
-  // which puts the sticky header off-screen.
-  useScrollToTop();
+  useSpendingNotifications(user?.id);
 
   return (
     <div className="min-h-dvh">
+      <UpdateBanner />
       <OfflineBanner />
       <Sidebar />
 
@@ -26,16 +25,13 @@ export default function AppLayout() {
             <Logo size={36} />
             <span className="font-semibold">{APP_NAME}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <NotificationBell />
-            <Link to="/settings" aria-label="Profile and settings">
-              <Avatar
-                url={user?.user_metadata?.avatar_url}
-                name={user?.user_metadata?.full_name || user?.email}
-                size={32}
-              />
-            </Link>
-          </div>
+          <Link to="/settings" aria-label="Profile and settings">
+            <Avatar
+              url={user?.user_metadata?.avatar_url}
+              name={user?.user_metadata?.full_name || user?.email}
+              size={32}
+            />
+          </Link>
         </header>
 
         <main className="mx-auto max-w-5xl px-4 pb-32 pt-5 lg:px-8 lg:pb-10 lg:pt-8">
